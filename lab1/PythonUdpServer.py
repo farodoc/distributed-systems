@@ -10,10 +10,7 @@ print('PYTHON UDP SERVER')
 while True:
 
     buff, address = serverSocket.recvfrom(1024)
+    print("python udp server received msg: " + str(buff, 'cp1250'))
 
-    text = str(buff, 'cp1250')
 
-    if text[0] == 'P':
-        print("python udp server received msg from python client: " + text[1:])
-    else:
-        print("python udp server received msg from java client: " + text[1:])
+
