@@ -41,7 +41,7 @@ public class ServerThread implements Runnable {
             System.out.println("received msg: " + msg);
 
             String command = msg.split(" ")[0];
-            msg = msg.substring(command.length() + 1);
+            msg = "[" + clientId + "]: " + msg.substring(command.length());
 
             switch (command) {
                 case "[b]":
@@ -63,11 +63,6 @@ public class ServerThread implements Runnable {
         }
     }
 
-    public void sendMessageWithClientId(String msg) {
-        msg = "[" + clientId + "]: " + msg;
-        sendMessage(msg);
-    }
-
     public void sendMessage(String msg) {
         out.println(msg);
     }
@@ -75,13 +70,17 @@ public class ServerThread implements Runnable {
     public void broadcast(String msg) {
         Server.getClientThreads().forEach(clientThread -> {
             if (clientThread.getClientId() != clientId) {
-                clientThread.sendMessageWithClientId(msg);
+                clientThread.sendMessage(msg);
             }
         });
     }
 
     public int getClientId() {
         return clientId;
+    }
+
+    public Socket getClientSocket() {
+        return clientSocket;
     }
 
 }

@@ -2,6 +2,7 @@ package homework;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +17,11 @@ public class Server {
 
     private static void startServer() throws IOException {
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT_NUMBER)) {
+        try (ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
+            DatagramSocket udpServerSocket = new DatagramSocket(PORT_NUMBER)) {
+
+            new Thread(() -> listenToUdp(udpServerSocket)).start();
+
             while(true){
                 ServerThread serverThread = new ServerThread();
                 try {
@@ -26,6 +31,44 @@ public class Server {
                 } catch (SocketTimeoutException socketTimeoutException) {
                     System.err.println(socketTimeoutException);
                 }
+            }
+        }
+    }
+
+    private static void listenToUdp(DatagramSocket udpSocket) {
+        byte[] receiveBuffer = new byte[1024];
+
+        while (true) {
+            Arrays.fill(receiveBuffer, (byte) 0);
+            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+            try {
+                udpSocket.receive(receivePacket);
+
+                int senderId = -1;
+                for (ServerThread clientThread : clientThreads) {
+                    if (clientThread.getClientSocket().getPort() == receivePacket.getPort()
+                            && clientThread.getClientSocket().getInetAddress().equals(receivePacket.getAddress())) {
+                        senderId = clientThread.getClientId();
+                    }
+                }
+
+                String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
+                System.out.println("[UDP] received msg: " + msg);
+                msg = "[" + senderId + "]: " + msg;
+
+                receiveBuffer = msg.getBytes();
+
+                for (ServerThread clientThread : clientThreads) {
+                    if (clientThread.getClientId() != senderId) {
+                        InetAddress address = clientThread.getClientSocket().getInetAddress();
+                        int port = clientThread.getClientSocket().getPort();
+                        DatagramPacket sendPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length, address, port);
+                        udpSocket.send(sendPacket);
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
