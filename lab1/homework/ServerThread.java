@@ -24,7 +24,8 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run(){
-        System.out.println("####### New client session started. " + clientSocket.hashCode() + " | clientSocket.getLocalPort(): " + clientSocket.getLocalPort()
+        System.out.println("####### New client session started. " + clientSocket.hashCode()
+                + " | clientSocket.getLocalPort(): " + clientSocket.getLocalPort()
                 + " | clientSocket.getPort(): " + clientSocket.getPort());
         try {
             out = new PrintWriter(clientSocket.getOutputStream(), true);

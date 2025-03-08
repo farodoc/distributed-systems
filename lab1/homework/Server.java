@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 public class Server {
 
     private static final int PORT_NUMBER = 12345;
-    private static Set<ServerThread> clientThreads = ConcurrentHashMap.newKeySet();
+    private static final Set<ServerThread> clientThreads = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) throws IOException {
         startServer();
@@ -25,7 +25,7 @@ public class Server {
             ExecutorService executorService = Executors.newFixedThreadPool(8);
             executorService.submit(() -> listenToUdp(udpServerSocket));
 
-            while(true){
+            while (true) {
                 ServerThread serverThread = new ServerThread();
                 try {
                     serverThread.setClientSocket(serverSocket.accept());
