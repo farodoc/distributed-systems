@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Client {
 
@@ -47,8 +49,10 @@ public class Client {
             id = Integer.parseInt(initResponse);
             System.out.println("ID: " + id);
 
+            ExecutorService executorService = Executors.newFixedThreadPool(8);
+
             // TCP read thread
-            Thread tcpReadThread = new Thread(() -> {
+            executorService.submit(() -> {
                 try {
                     String response;
                     while ((response = in.readLine()) != null) {
@@ -61,10 +65,9 @@ public class Client {
                     System.exit(0);
                 }
             });
-            tcpReadThread.start();
 
             // UDP read thread
-            Thread udpReadThread = new Thread(() -> {
+            executorService.submit(() -> {
                 byte[] receiveBuffer = new byte[1024];
                 DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
@@ -78,10 +81,9 @@ public class Client {
                     }
                 }
             });
-            udpReadThread.start();
 
             // Multicast read thread
-            Thread multicastReadThread = new Thread(() -> {
+            executorService.submit(() -> {
                 byte[] receiveBuffer = new byte[1024];
                 DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
 
@@ -95,7 +97,6 @@ public class Client {
                     }
                 }
             });
-            multicastReadThread.start();
 
             // write thread
             String userInput;

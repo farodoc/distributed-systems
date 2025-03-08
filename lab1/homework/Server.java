@@ -5,6 +5,8 @@ import java.net.*;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
 
@@ -20,14 +22,14 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
             DatagramSocket udpServerSocket = new DatagramSocket(PORT_NUMBER)) {
 
-            new Thread(() -> listenToUdp(udpServerSocket)).start();
+            ExecutorService executorService = Executors.newFixedThreadPool(8);
+            executorService.submit(() -> listenToUdp(udpServerSocket));
 
             while(true){
                 ServerThread serverThread = new ServerThread();
                 try {
                     serverThread.setClientSocket(serverSocket.accept());
-                    Thread thread = new Thread(serverThread);
-                    thread.start();
+                    executorService.submit(serverThread);
                 } catch (SocketTimeoutException socketTimeoutException) {
                     System.err.println(socketTimeoutException);
                 }
