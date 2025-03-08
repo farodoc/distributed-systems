@@ -34,7 +34,7 @@ public class Client {
              DatagramSocket udpSocket = new DatagramSocket(socket.getLocalPort());
              MulticastSocket multicastSocket = new MulticastSocket(MULTICAST_PORT)) {
 
-            multicastSocket.joinGroup(MULTICAST_GROUP);
+            multicastSocket.joinGroup(new InetSocketAddress(MULTICAST_GROUP, MULTICAST_PORT), null);
 
             System.out.println("Connection Successful!");
 
@@ -59,10 +59,12 @@ public class Client {
                         System.out.println(response);
                     }
                 } catch (IOException e) {
+                    if (socket.isClosed()) {
+                        return;
+                    }
                     System.out.println("Server closed the connection.");
                 } finally {
-                    System.out.println("Exiting...");
-                    System.exit(0);
+                    shutdown(socket, udpSocket, multicastSocket, executorService);
                 }
             });
 
@@ -77,6 +79,9 @@ public class Client {
                         String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
                         System.out.println("[UDP] " + msg);
                     } catch (IOException e) {
+                        if (udpSocket.isClosed()) {
+                            break;
+                        }
                         e.printStackTrace();
                     }
                 }
@@ -93,6 +98,9 @@ public class Client {
                         String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
                         System.out.println("[Multicast] " + msg);
                     } catch (IOException e) {
+                        if (multicastSocket.isClosed()) {
+                            break;
+                        }
                         e.printStackTrace();
                     }
                 }
@@ -112,8 +120,6 @@ public class Client {
 
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            System.out.println("Connection closed.");
         }
     }
 
@@ -129,6 +135,26 @@ public class Client {
 
         DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, MULTICAST_GROUP, MULTICAST_PORT);
         udpSocket.send(sendPacket);
+    }
+
+    private static void shutdown(Socket socket, DatagramSocket udpSocket, MulticastSocket multicastSocket, ExecutorService executorService) {
+        try {
+            System.out.println("Exiting...");
+            if (!multicastSocket.isClosed()) {
+                multicastSocket.leaveGroup(new InetSocketAddress(MULTICAST_GROUP, MULTICAST_PORT), null);
+                multicastSocket.close();
+            }
+            if (!socket.isClosed()) {
+                socket.close();
+            }
+            if (!udpSocket.isClosed()) {
+                udpSocket.close();
+            }
+            executorService.shutdownNow();
+            System.exit(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

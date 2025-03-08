@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ServerThread implements Runnable {
 
@@ -36,30 +37,43 @@ public class ServerThread implements Runnable {
     }
 
     public void listenToSocket() throws IOException {
-        while (isConnected) {
-            String msg = in.readLine();
-            System.out.println("received msg: " + msg);
+        try {
+            while (isConnected) {
+                String msg = in.readLine();
 
-            String command = msg.split(" ")[0];
-            msg = "[" + clientId + "]: " + msg.substring(command.length());
-
-            switch (command) {
-                case "[b]":
-                    broadcast(msg);
-                    break;
-
-                case "[q]":
-                    Server.removeClientThread(this);
-                    clientSocket.close();
-                    isConnected = false;
+                if (msg == null) {
                     System.out.println("Client " + clientId + " disconnected.");
+                    Server.removeClientThread(this);
+                    isConnected = false;
                     break;
+                }
 
-                default:
-                    System.out.println("Invalid command.");
-                    sendMessage("Invalid command.");
-                    break;
+                System.out.println("received msg: " + msg);
+
+                String command = msg.split(" ")[0];
+                msg = "[" + clientId + "]: " + msg.substring(command.length());
+
+                switch (command) {
+                    case "[b]":
+                        broadcast(msg);
+                        break;
+
+                    case "[q]":
+                        Server.removeClientThread(this);
+                        clientSocket.close();
+                        isConnected = false;
+                        System.out.println("Client " + clientId + " disconnected.");
+                        break;
+
+                    default:
+                        System.out.println("Invalid command.");
+                        sendMessage("Invalid command.");
+                        break;
+                }
             }
+        } catch (SocketException e) {
+            System.out.println("Client " + clientId + " disconnected.");
+            Server.removeClientThread(this);
         }
     }
 
