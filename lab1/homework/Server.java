@@ -22,7 +22,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
             DatagramSocket udpServerSocket = new DatagramSocket(PORT_NUMBER)) {
 
-            ExecutorService executorService = Executors.newFixedThreadPool(8);
+            ExecutorService executorService = Executors.newCachedThreadPool();
             executorService.submit(() -> listenToUdp(udpServerSocket));
 
             while (true) {

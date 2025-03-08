@@ -49,7 +49,7 @@ public class Client {
             id = Integer.parseInt(initResponse);
             System.out.println("ID: " + id);
 
-            ExecutorService executorService = Executors.newFixedThreadPool(8);
+            ExecutorService executorService = Executors.newCachedThreadPool();
 
             // TCP read thread
             executorService.submit(() -> {
