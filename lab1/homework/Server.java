@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
-    private final static int PORT_NUMBER = 12345;
+    private static final int PORT_NUMBER = 12345;
     private static Set<ServerThread> clientThreads = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) throws IOException {
