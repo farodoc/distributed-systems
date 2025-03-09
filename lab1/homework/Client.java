@@ -17,6 +17,17 @@ public class Client {
     private static final InetAddress MULTICAST_GROUP;
     private static final int MULTICAST_PORT = 12346;
     private static int id;
+    private static final String ASCII_ART = """
+            
+                                    \\_/
+                                  --(_)--
+                                    / \\
+                   ,-,  .----.
+                   |-| /______\\    __ __
+                   | | |  __  |   (())())
+                   | | | |><| |    )( )(
+                 .-''''''''''''-.-'''''''-.
+            """;
 
     static {
         try {
@@ -36,8 +47,6 @@ public class Client {
 
             multicastSocket.joinGroup(new InetSocketAddress(MULTICAST_GROUP, MULTICAST_PORT), null);
 
-            System.out.println("Connection Successful!");
-
             // in & out streams
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -47,7 +56,8 @@ public class Client {
             // initializing client id
             String initResponse = in.readLine();
             id = Integer.parseInt(initResponse);
-            System.out.println("ID: " + id);
+
+            System.out.println("Connection Successful!\nID: " + id);
 
             ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -96,6 +106,10 @@ public class Client {
                     try {
                         multicastSocket.receive(receivePacket);
                         String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
+                        int senderId = Integer.parseInt(msg.substring(1, msg.indexOf("]")));
+                        if (senderId == id) {
+                            continue;
+                        }
                         System.out.println("[Multicast] " + msg);
                     } catch (IOException e) {
                         if (multicastSocket.isClosed()) {
@@ -109,12 +123,21 @@ public class Client {
             // write thread
             String userInput;
             while ((userInput = stdIn.readLine()) != null && !socket.isClosed()) {
-                if (userInput.startsWith("[U]")) {
-                    sendUdpMessage(udpSocket, userInput.substring(3));
-                } else if (userInput.startsWith("[M]")) {
-                    sendMulticastMessage(udpSocket, userInput.substring(3));
-                } else {
-                    out.println(userInput);
+                String command = userInput.split(" ")[0];
+
+                switch (command) {
+                    case "[U]":
+                        sendUdpMessage(udpSocket, userInput.substring(command.length()));
+                        break;
+                    case "[M]":
+                        sendMulticastMessage(udpSocket, userInput.substring(command.length()));
+                        break;
+                    case "[T]":
+                        sendUdpMessage(udpSocket, ASCII_ART);
+                        break;
+                    default:
+                        out.println(userInput);
+                        break;
                 }
             }
 
@@ -131,7 +154,8 @@ public class Client {
     }
 
     private static void sendMulticastMessage(DatagramSocket udpSocket, String message) throws IOException {
-        byte[] sendBuffer = message.getBytes();
+        String messageWithId = "[" + id + "]:" + message;
+        byte[] sendBuffer = messageWithId.getBytes();
 
         DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, MULTICAST_GROUP, MULTICAST_PORT);
         udpSocket.send(sendPacket);

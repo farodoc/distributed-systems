@@ -49,10 +49,10 @@ public class ServerThread implements Runnable {
                     break;
                 }
 
-                System.out.println("received msg: " + msg);
+                System.out.println("received msg:" + msg);
 
                 String command = msg.split(" ")[0];
-                msg = "[" + clientId + "]: " + msg.substring(command.length());
+                msg = "[" + clientId + "]:" + msg.substring(command.length());
 
                 switch (command) {
                     case "[b]":

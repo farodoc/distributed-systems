@@ -55,8 +55,8 @@ public class Server {
                 }
 
                 String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
-                System.out.println("[UDP] received msg: " + msg);
-                msg = "[" + senderId + "]: " + msg;
+                System.out.println("[UDP] received msg:" + msg);
+                msg = "[" + senderId + "]:" + msg;
 
                 receiveBuffer = msg.getBytes();
 
