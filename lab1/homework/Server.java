@@ -66,13 +66,13 @@ public class Server {
                 System.out.println("[UDP] received msg:" + msg);
                 msg = "[" + senderId + "]:" + msg;
 
-                receiveBuffer = msg.getBytes();
+                byte[] sendBuffer = msg.getBytes();
 
                 for (ServerThread clientThread : clientThreads) {
                     if (clientThread.getClientId() != senderId) {
                         InetAddress address = clientThread.getClientSocket().getInetAddress();
                         int port = clientThread.getClientSocket().getPort();
-                        DatagramPacket sendPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length, address, port);
+                        DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, address, port);
                         udpServerSocket.send(sendPacket);
                     }
                 }
