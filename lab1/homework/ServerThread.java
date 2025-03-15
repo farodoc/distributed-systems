@@ -9,17 +9,22 @@ import java.net.SocketException;
 
 public class ServerThread implements Runnable {
 
+    private final Server server;
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
     private int clientId;
     private boolean isConnected = false;
 
+    public ServerThread(Server server) {
+        this.server = server;
+    }
+
     public void setClientSocket(Socket clientSocket) {
         this.clientSocket = clientSocket;
         clientId = clientSocket.hashCode();
         isConnected = true;
-        Server.addClientThread(this);
+        server.addClientThread(this);
     }
 
     @Override
@@ -44,7 +49,7 @@ public class ServerThread implements Runnable {
 
                 if (msg == null) {
                     System.out.println("Client " + clientId + " disconnected.");
-                    Server.removeClientThread(this);
+                    server.removeClientThread(this);
                     isConnected = false;
                     break;
                 }
@@ -60,7 +65,7 @@ public class ServerThread implements Runnable {
                         break;
 
                     case "[q]":
-                        Server.removeClientThread(this);
+                        server.removeClientThread(this);
                         clientSocket.close();
                         isConnected = false;
                         System.out.println("Client " + clientId + " disconnected.");
@@ -74,7 +79,7 @@ public class ServerThread implements Runnable {
             }
         } catch (SocketException e) {
             System.out.println("Client " + clientId + " disconnected.");
-            Server.removeClientThread(this);
+            server.removeClientThread(this);
         }
     }
 
@@ -83,7 +88,7 @@ public class ServerThread implements Runnable {
     }
 
     public void broadcast(String msg) {
-        Server.getClientThreads().forEach(clientThread -> {
+        server.getClientThreads().forEach(clientThread -> {
             if (clientThread.getClientId() != clientId) {
                 clientThread.sendMessage(msg);
             }

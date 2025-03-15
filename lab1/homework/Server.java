@@ -11,22 +11,26 @@ import java.util.concurrent.Executors;
 public class Server {
 
     private static final int PORT_NUMBER = 12345;
-    private static final Set<ServerThread> clientThreads = ConcurrentHashMap.newKeySet();
+    private static Server server;
+    private final Set<ServerThread> clientThreads = ConcurrentHashMap.newKeySet();
+    private ServerSocket serverSocket;
+    private DatagramSocket udpServerSocket;
+    ExecutorService executorService = Executors.newCachedThreadPool();
 
     public static void main(String[] args) throws IOException {
-        startServer();
+        server = new Server();
+        server.startServer();
     }
 
-    private static void startServer() throws IOException {
+    private void startServer() throws IOException {
+        try {
+            serverSocket = new ServerSocket(PORT_NUMBER);
+            udpServerSocket = new DatagramSocket(PORT_NUMBER);
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
-            DatagramSocket udpServerSocket = new DatagramSocket(PORT_NUMBER)) {
-
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            executorService.submit(() -> listenToUdp(udpServerSocket));
+            executorService.submit(this::udpHandler);
 
             while (true) {
-                ServerThread serverThread = new ServerThread();
+                ServerThread serverThread = new ServerThread(this);
                 try {
                     serverThread.setClientSocket(serverSocket.accept());
                     executorService.submit(serverThread);
@@ -34,17 +38,21 @@ public class Server {
                     System.err.println(socketTimeoutException);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            stopServer();
         }
     }
 
-    private static void listenToUdp(DatagramSocket udpSocket) {
+    private void udpHandler() {
         byte[] receiveBuffer = new byte[1024];
 
         while (true) {
             Arrays.fill(receiveBuffer, (byte) 0);
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             try {
-                udpSocket.receive(receivePacket);
+                udpServerSocket.receive(receivePacket);
 
                 int senderId = -1;
                 for (ServerThread clientThread : clientThreads) {
@@ -65,7 +73,7 @@ public class Server {
                         InetAddress address = clientThread.getClientSocket().getInetAddress();
                         int port = clientThread.getClientSocket().getPort();
                         DatagramPacket sendPacket = new DatagramPacket(receiveBuffer, receiveBuffer.length, address, port);
-                        udpSocket.send(sendPacket);
+                        udpServerSocket.send(sendPacket);
                     }
                 }
 
@@ -75,15 +83,27 @@ public class Server {
         }
     }
 
-    public static void addClientThread(ServerThread clientThread) {
+    public void addClientThread(ServerThread clientThread) {
         clientThreads.add(clientThread);
     }
 
-    public static void removeClientThread(ServerThread clientThread) {
+    public void removeClientThread(ServerThread clientThread) {
         clientThreads.remove(clientThread);
     }
 
-    public static Set<ServerThread> getClientThreads() {
+    public Set<ServerThread> getClientThreads() {
         return clientThreads;
     }
+
+    private void stopServer() {
+        executorService.shutdown();
+        try {
+            serverSocket.close();
+            udpServerSocket.close();
+        } catch (IOException e) {
+            System.out.println("Error while shutting down server.");
+            e.printStackTrace();
+        }
+    }
+
 }

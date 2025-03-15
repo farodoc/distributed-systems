@@ -16,7 +16,6 @@ public class Client {
     private static final String MULTICAST_ADDRESS = "230.0.0.1";
     private static final InetAddress MULTICAST_GROUP;
     private static final int MULTICAST_PORT = 12346;
-    private static int id;
     private static final String ASCII_ART = """
             
                                     \\_/
@@ -38,12 +37,24 @@ public class Client {
         }
     }
 
+    private static Client client;
+    private int id;
+    private Socket socket;
+    private DatagramSocket udpSocket;
+    private MulticastSocket multicastSocket;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+
 
     public static void main(String[] args) throws IOException {
+        client = new Client();
+        client.runClient();
+    }
 
-        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-             DatagramSocket udpSocket = new DatagramSocket(socket.getLocalPort());
-             MulticastSocket multicastSocket = new MulticastSocket(MULTICAST_PORT)) {
+    private void runClient() {
+        try {
+            socket = new Socket(SERVER_IP, SERVER_PORT);
+            udpSocket = new DatagramSocket(socket.getLocalPort());
+            multicastSocket = new MulticastSocket(MULTICAST_PORT);
 
             multicastSocket.joinGroup(new InetSocketAddress(MULTICAST_GROUP, MULTICAST_PORT), null);
 
@@ -59,66 +70,14 @@ public class Client {
 
             System.out.println("Connection Successful!\nID: " + id);
 
-            ExecutorService executorService = Executors.newCachedThreadPool();
-
             // TCP read thread
-            executorService.submit(() -> {
-                try {
-                    String response;
-                    while ((response = in.readLine()) != null) {
-                        System.out.println(response);
-                    }
-                } catch (IOException e) {
-                    if (socket.isClosed()) {
-                        return;
-                    }
-                    System.out.println("Server closed the connection.");
-                } finally {
-                    shutdown(socket, udpSocket, multicastSocket, executorService);
-                }
-            });
+            executorService.submit(() -> tcpHandler(in));
 
             // UDP read thread
-            executorService.submit(() -> {
-                byte[] receiveBuffer = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-
-                while (true) {
-                    try {
-                        udpSocket.receive(receivePacket);
-                        String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
-                        System.out.println("[UDP] " + msg);
-                    } catch (IOException e) {
-                        if (udpSocket.isClosed()) {
-                            break;
-                        }
-                        e.printStackTrace();
-                    }
-                }
-            });
+            executorService.submit(this::udpHandler);
 
             // Multicast read thread
-            executorService.submit(() -> {
-                byte[] receiveBuffer = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-
-                while (true) {
-                    try {
-                        multicastSocket.receive(receivePacket);
-                        String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
-                        int senderId = Integer.parseInt(msg.substring(1, msg.indexOf("]")));
-                        if (senderId == id) {
-                            continue;
-                        }
-                        System.out.println("[Multicast] " + msg);
-                    } catch (IOException e) {
-                        if (multicastSocket.isClosed()) {
-                            break;
-                        }
-                        e.printStackTrace();
-                    }
-                }
-            });
+            executorService.submit(this::multicastHandler);
 
             // write thread
             String userInput;
@@ -143,17 +102,75 @@ public class Client {
 
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            stopClient(socket, udpSocket, multicastSocket, executorService);
         }
     }
 
-    private static void sendUdpMessage(DatagramSocket udpSocket, String message) throws IOException {
+    private void tcpHandler(BufferedReader in) {
+        try {
+            String response;
+            while ((response = in.readLine()) != null) {
+                System.out.println(response);
+            }
+        } catch (IOException e) {
+            if (socket.isClosed()) {
+                return;
+            }
+            System.out.println("Server closed the connection.");
+        } finally {
+            stopClient(socket, udpSocket, multicastSocket, executorService);
+        }
+    }
+
+    private void udpHandler() {
+        byte[] receiveBuffer = new byte[1024];
+        DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+
+        while (true) {
+            try {
+                udpSocket.receive(receivePacket);
+                String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
+                System.out.println("[UDP] " + msg);
+            } catch (IOException e) {
+                if (udpSocket.isClosed()) {
+                    break;
+                }
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void multicastHandler() {
+        byte[] receiveBuffer = new byte[1024];
+        DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+
+        while (true) {
+            try {
+                multicastSocket.receive(receivePacket);
+                String msg = new String(receivePacket.getData(), 0, receivePacket.getLength(), "cp1250");
+                int senderId = Integer.parseInt(msg.substring(1, msg.indexOf("]")));
+                if (senderId == id) {
+                    continue;
+                }
+                System.out.println("[Multicast] " + msg);
+            } catch (IOException e) {
+                if (multicastSocket.isClosed()) {
+                    break;
+                }
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void sendUdpMessage(DatagramSocket udpSocket, String message) throws IOException {
         byte[] sendBuffer = message.getBytes();
 
         DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, SERVER_IP, SERVER_PORT);
         udpSocket.send(sendPacket);
     }
 
-    private static void sendMulticastMessage(DatagramSocket udpSocket, String message) throws IOException {
+    private void sendMulticastMessage(DatagramSocket udpSocket, String message) throws IOException {
         String messageWithId = "[" + id + "]:" + message;
         byte[] sendBuffer = messageWithId.getBytes();
 
@@ -161,9 +178,10 @@ public class Client {
         udpSocket.send(sendPacket);
     }
 
-    private static void shutdown(Socket socket, DatagramSocket udpSocket, MulticastSocket multicastSocket, ExecutorService executorService) {
+    private void stopClient(Socket socket, DatagramSocket udpSocket, MulticastSocket multicastSocket, ExecutorService executorService) {
         try {
             System.out.println("Exiting...");
+            executorService.shutdownNow();
             if (!multicastSocket.isClosed()) {
                 multicastSocket.leaveGroup(new InetSocketAddress(MULTICAST_GROUP, MULTICAST_PORT), null);
                 multicastSocket.close();
@@ -174,9 +192,9 @@ public class Client {
             if (!udpSocket.isClosed()) {
                 udpSocket.close();
             }
-            executorService.shutdownNow();
             System.exit(0);
         } catch (IOException e) {
+            System.out.println("Error while closing the client.");
             e.printStackTrace();
         }
     }
