@@ -37,9 +37,6 @@ async def get_weather(
                 geo_response.raise_for_status()
                 geo_data = geo_response.json()
 
-                if geo_response.is_server_error:
-                    raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Google geocoding API error")
-
                 if geo_data["status"] == "OK":
                     location = geo_data["results"][0]["geometry"]["location"]
                     latitude = location["lat"]
@@ -60,8 +57,10 @@ async def get_weather(
             response = await client.get(WEATHER_API_URL, params=params)
             response.raise_for_status()
             weather_data = response.json()
+
+        results = generate_results(weather_data, city, latitude, longitude, weather_params)
         
-        return generate_results(weather_data, city, latitude, longitude, weather_params)
+        return HTMLResponse(content=results, status_code=HTTPStatus.OK)
             
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
@@ -96,15 +95,15 @@ def generate_results(weather_data, city, latitude, longitude, weather_params):
     html_content += "</tr>"
 
     for i, time in enumerate(times):
-        hour = datetime.fromisoformat(time).strftime('%H:00')
         html_content += f"""
                 <tr>
-                    <td>{hour}</td>
+                    <td>{time}</td>
         """
 
         for param in weather_params:
             value = weather_data['hourly'][param][i]
             html_content += f"<td>{value}</td>"
+
         html_content += "</tr>"
     
     html_content += """
@@ -115,4 +114,4 @@ def generate_results(weather_data, city, latitude, longitude, weather_params):
     </html>
     """
     
-    return HTMLResponse(content=html_content)
+    return html_content
