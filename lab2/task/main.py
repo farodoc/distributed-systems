@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from http import HTTPStatus
 import httpx
-from datetime import datetime
 from typing import Optional, List
 
 app = FastAPI()
@@ -48,15 +47,7 @@ async def get_weather(
             raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Either city name or both latitude and longitude are required")
 
         async with httpx.AsyncClient() as client:
-            params = {
-                "latitude": latitude,
-                "longitude": longitude,
-                "hourly": ",".join(weather_params)
-            }
-
-            response = await client.get(WEATHER_API_URL, params=params)
-            response.raise_for_status()
-            weather_data = response.json()
+            weather_data = await get_average_weather(client, latitude, longitude, weather_params)
 
         results = generate_results(weather_data, city, latitude, longitude, weather_params)
         
@@ -65,7 +56,48 @@ async def get_weather(
     except Exception as e:
         raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+async def get_average_weather(client, latitude, longitude, weather_params):
+    offset = 0.5
+    map_points = [
+        (latitude + offset, longitude),
+        (latitude - offset, longitude),
+        (latitude, longitude + offset),
+        (latitude, longitude - offset)
+    ]
     
+    responses = []
+    for lat, lon in map_points:
+        response = await fetch_weather_data(client, lat, lon, weather_params)
+        responses.append(response)
+    
+    avg_data = {'hourly': {}}
+    for param in weather_params:
+        avg_data['hourly'][param] = []
+
+    avg_data['hourly']['time'] = responses[0]['hourly']['time']
+
+    for param in weather_params:
+        for hour in range(24):
+            values = [response['hourly'][param][hour] for response in responses]
+            avg_value = round(sum(values) / len(values), 2)
+            avg_data['hourly'][param].append(avg_value)
+    
+    return avg_data
+
+
+async def fetch_weather_data(client, latitude, longitude, weather_params):
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": ",".join(weather_params)
+    }
+
+    response = await client.get(WEATHER_API_URL, params=params)
+    response.raise_for_status()
+    return response.json()
+    
+
 def generate_results(weather_data, city, latitude, longitude, weather_params):
     times = weather_data['hourly']['time'][:24]   
     location_name = city if city else f"({latitude}, {longitude})"
