@@ -2,6 +2,7 @@ package sr.thrift.client;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.async.AsyncMethodCallback;
@@ -46,9 +47,9 @@ public class ThriftClient
 			{
 				transport = new TSocket(host, 9080);
 
-				//protocol = new TBinaryProtocol(transport);
-				//protocol = new TJSONProtocol(transport);
-				protocol = new TCompactProtocol(transport);
+				protocol = new TBinaryProtocol(transport);
+//				protocol = new TJSONProtocol(transport);
+//				protocol = new TCompactProtocol(transport);
 
 				synCalc1 = new Calculator.Client(protocol);
 				synAdvCalc1 = new AdvancedCalculator.Client(protocol); //wskazuje na ten sam zdalny obiekt - dlaczego?
@@ -60,7 +61,7 @@ public class ThriftClient
 
 				protocol = new TBinaryProtocol(transport);
 				//protocol = new TJSONProtocol(transport);
-				//protocol = new TCompactProtocol(transport);
+//				protocol = new TCompactProtocol(transport);
 
 				synCalc1 = new Calculator.Client(new TMultiplexedProtocol(protocol, "S1"));
 				synCalc2 = new Calculator.Client(new TMultiplexedProtocol(protocol, "S2"));
@@ -70,7 +71,7 @@ public class ThriftClient
 			}
 			else
 			{
-				System.out.println("No correct option chosen. Exitting");
+				System.out.println("No correct option chosen. Exiting");
 				System.exit(1);
 			}
 
@@ -82,6 +83,11 @@ public class ThriftClient
 				try {
 					if (line == null) {
 						break;
+
+					} else if (line.equals("median")) {
+						List<Integer> numbers = List.of(1, 2, 3, 4);
+						double res = synCalc1.median(numbers);
+						System.out.println("median(" + numbers.toString() + ") returned " + res);
 					} else if (line.equals("add1a")) {
 						int arg1 = 44;
 						int arg2 = 55;
