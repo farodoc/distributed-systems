@@ -20,11 +20,11 @@ public class IceClient {
 			// 1. Inicjalizacja ICE
 			communicator = Util.initialize(args);
 
-			// 2. Uzyskanie referencji obiektu na podstawie linii w pliku konfiguracyjnym (wówczas aplikację należy uruchomić z argumentem --Ice.config=config.client)
-			//ObjectPrx base1 = communicator.propertyToProxy("Calc1.Proxy");
+			// 2. Uzyskanie referencji obiektu na podstawie linii w pliku konfiguracyjnym (wówczas aplikację należy uruchomić z argumentem --Ice.Config=config.client)
+			ObjectPrx base1 = communicator.propertyToProxy("Calc1.Proxy");
 
 			// 2. Uzyskanie referencji obiektu - to samo co powyżej, ale mniej ładnie
-			ObjectPrx base1 = communicator.stringToProxy("calc/calc22:tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z"); //opcja -z włącza możliwość kompresji wiadomości
+//			ObjectPrx base1 = communicator.stringToProxy("calc/calc22:tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z"); //opcja -z włącza możliwość kompresji wiadomości
 			ObjectPrx base2 = communicator.stringToProxy("calc/calc33:tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z"); //opcja -z włącza możliwość kompresji wiadomości
 
 			// 3. Rzutowanie, zawężanie (do typu Calc)
@@ -59,6 +59,10 @@ public class IceClient {
 						case "subtract":
 							r = obj2.subtract(7, 8);
 							System.out.println("RESULT = " + r);
+							break;
+						case "avg":
+							double res = obj2.avg(new long[]{1, 2, 3, 4, 5});
+							System.out.println("RESULT = " + res);
 							break;
 						case "op":
 							a = new A((short) 11, 22, 33.0f, "ala ma kota");
