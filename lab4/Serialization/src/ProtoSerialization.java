@@ -1,8 +1,6 @@
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-
 import sr.proto.AddressBookProtos.Person;
 
 public class ProtoSerialization {
@@ -32,6 +30,15 @@ public class ProtoSerialization {
                                 Person.PhoneNumber.newBuilder()
                                         .setNumber("+48-699-989-796")
                                         .setType(Person.PhoneType.MOBILE))
+                        .addIncomes(
+                                Person.Income.newBuilder()
+                                        .setAmount(1000))
+                        .addIncomes(
+                                Person.Income.newBuilder()
+                                        .setAmount(2000))
+                        .addIncomes(
+                                Person.Income.newBuilder()
+                                        .setAmount(3000))
                         .build();
 
         byte[] personSer = null;
