@@ -1,6 +1,8 @@
-IndoorCamera1.Proxy=IndoorCamera/IndoorCamera1 : tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z
+IndoorCamera1.Proxy=IndoorCamera/IndoorCamera1 : tcp -h 127.0.0.2 -p 10000 : udp -h 127.0.0.2 -p 10000
 OutdoorCamera1.Proxy=OutdoorCamera/OutdoorCamera1 : tcp -h 127.0.0.2 -p 10000 : udp -h 127.0.0.2 -p 10000
-COSensor1.Proxy=COSensor/COSensor1 : tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z
+AirConditioner1.Proxy=AirConditioner/AirConditioner1 : tcp -h 127.0.0.2 -p 10000 : udp -h 127.0.0.2 -p 10000
 
-AirConditioner1.Proxy=AirConditioner/AirConditioner1 : tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z
-AirConditioner2.Proxy=AirConditioner/AirConditioner2 : tcp -h 127.0.0.2 -p 10000 -z : udp -h 127.0.0.2 -p 10000 -z
+COSensor2.Proxy=COSensor/COSensor2 : tcp -h 127.0.0.3 -p 10000 : udp -h 127.0.0.3 -p 10000
+AirConditioner2.Proxy=AirConditioner/AirConditioner2 : tcp -h 127.0.0.3 -p 10000 : udp -h 127.0.0.3 -p 10000
+
+# COSensor and AirConditioner2 on 127.0.0.3, the rest on 127.0.0.2

@@ -9,7 +9,7 @@ def run_client(communicator: Ice.CommunicatorI):
     try:
         base1 = communicator.propertyToProxy("IndoorCamera1.Proxy")
         base2 = communicator.propertyToProxy("OutdoorCamera1.Proxy")
-        base3 = communicator.propertyToProxy("COSensor1.Proxy")
+        base3 = communicator.propertyToProxy("COSensor2.Proxy")
         base4 = communicator.propertyToProxy("AirConditioner1.Proxy")
         base5 = communicator.propertyToProxy("AirConditioner2.Proxy")
         
