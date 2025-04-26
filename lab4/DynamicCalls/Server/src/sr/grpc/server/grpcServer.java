@@ -6,11 +6,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
 
@@ -18,8 +16,8 @@ public class grpcServer
 {
 	private static final Logger logger = Logger.getLogger(grpcServer.class.getName());
 
-	private String address = "127.0.0.5";
-	private int port = 50051;
+	private final String address = "127.0.0.5";
+	private final int port = 50051;
 	private Server server;
 
 	private SocketAddress socket;
@@ -28,13 +26,9 @@ public class grpcServer
 	{
 		try { socket = new InetSocketAddress(InetAddress.getByName(address), port);	} catch(UnknownHostException e) {};
 
-		//You will want to employ flow-control so that the queue doesn't blow up your memory. You can cast StreamObserver to CallStreamObserver to get flow-control API
-		server = ServerBuilder.forPort(50051).executor((Executors.newFixedThreadPool(16)))
-				//NettyServerBuilder.forAddress(socket).executor(Executors.newFixedThreadPool(16))
+		server = NettyServerBuilder.forAddress(socket).executor(Executors.newFixedThreadPool(16))
 				.addService(ProtoReflectionService.newInstance())
 				.addService(new CalculatorImpl())
-				.addService(new CalculatorImpl())
-				//.addService(new AdvancedCalculatorImpl())
 				.addService(new StreamTesterImpl())
 				.build()
 				.start();
@@ -42,7 +36,6 @@ public class grpcServer
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
-				// Use stderr here since the logger may have been reset by its JVM shutdown hook.
 				System.err.println("Shutting down gRPC server...");
 				grpcServer.this.stop();
 				System.err.println("Server shut down.");
