@@ -108,6 +108,37 @@ public final class CalculatorGrpc {
     return getMultiplyMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<sr.grpc.gen.WeightedAverageArguments,
+      sr.grpc.gen.WeightedAverageResult> getGetWeightedAverageMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "GetWeightedAverage",
+      requestType = sr.grpc.gen.WeightedAverageArguments.class,
+      responseType = sr.grpc.gen.WeightedAverageResult.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<sr.grpc.gen.WeightedAverageArguments,
+      sr.grpc.gen.WeightedAverageResult> getGetWeightedAverageMethod() {
+    io.grpc.MethodDescriptor<sr.grpc.gen.WeightedAverageArguments, sr.grpc.gen.WeightedAverageResult> getGetWeightedAverageMethod;
+    if ((getGetWeightedAverageMethod = CalculatorGrpc.getGetWeightedAverageMethod) == null) {
+      synchronized (CalculatorGrpc.class) {
+        if ((getGetWeightedAverageMethod = CalculatorGrpc.getGetWeightedAverageMethod) == null) {
+          CalculatorGrpc.getGetWeightedAverageMethod = getGetWeightedAverageMethod =
+              io.grpc.MethodDescriptor.<sr.grpc.gen.WeightedAverageArguments, sr.grpc.gen.WeightedAverageResult>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "GetWeightedAverage"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  sr.grpc.gen.WeightedAverageArguments.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  sr.grpc.gen.WeightedAverageResult.getDefaultInstance()))
+              .setSchemaDescriptor(new CalculatorMethodDescriptorSupplier("GetWeightedAverage"))
+              .build();
+        }
+      }
+    }
+    return getGetWeightedAverageMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -191,6 +222,13 @@ public final class CalculatorGrpc {
         io.grpc.stub.StreamObserver<sr.grpc.gen.ArithmeticOpResult> responseObserver) {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getMultiplyMethod(), responseObserver);
     }
+
+    /**
+     */
+    default void getWeightedAverage(sr.grpc.gen.WeightedAverageArguments request,
+        io.grpc.stub.StreamObserver<sr.grpc.gen.WeightedAverageResult> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetWeightedAverageMethod(), responseObserver);
+    }
   }
 
   /**
@@ -243,6 +281,14 @@ public final class CalculatorGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getMultiplyMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void getWeightedAverage(sr.grpc.gen.WeightedAverageArguments request,
+        io.grpc.stub.StreamObserver<sr.grpc.gen.WeightedAverageResult> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getGetWeightedAverageMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -281,6 +327,13 @@ public final class CalculatorGrpc {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getMultiplyMethod(), getCallOptions(), request);
     }
+
+    /**
+     */
+    public sr.grpc.gen.WeightedAverageResult getWeightedAverage(sr.grpc.gen.WeightedAverageArguments request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getGetWeightedAverageMethod(), getCallOptions(), request);
+    }
   }
 
   /**
@@ -318,6 +371,13 @@ public final class CalculatorGrpc {
     public sr.grpc.gen.ArithmeticOpResult multiply(sr.grpc.gen.MultiplyArguments request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getMultiplyMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public sr.grpc.gen.WeightedAverageResult getWeightedAverage(sr.grpc.gen.WeightedAverageArguments request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getGetWeightedAverageMethod(), getCallOptions(), request);
     }
   }
 
@@ -360,11 +420,20 @@ public final class CalculatorGrpc {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getMultiplyMethod(), getCallOptions()), request);
     }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<sr.grpc.gen.WeightedAverageResult> getWeightedAverage(
+        sr.grpc.gen.WeightedAverageArguments request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getGetWeightedAverageMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_ADD = 0;
   private static final int METHODID_SUBTRACT = 1;
   private static final int METHODID_MULTIPLY = 2;
+  private static final int METHODID_GET_WEIGHTED_AVERAGE = 3;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -394,6 +463,10 @@ public final class CalculatorGrpc {
         case METHODID_MULTIPLY:
           serviceImpl.multiply((sr.grpc.gen.MultiplyArguments) request,
               (io.grpc.stub.StreamObserver<sr.grpc.gen.ArithmeticOpResult>) responseObserver);
+          break;
+        case METHODID_GET_WEIGHTED_AVERAGE:
+          serviceImpl.getWeightedAverage((sr.grpc.gen.WeightedAverageArguments) request,
+              (io.grpc.stub.StreamObserver<sr.grpc.gen.WeightedAverageResult>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -434,6 +507,13 @@ public final class CalculatorGrpc {
               sr.grpc.gen.MultiplyArguments,
               sr.grpc.gen.ArithmeticOpResult>(
                 service, METHODID_MULTIPLY)))
+        .addMethod(
+          getGetWeightedAverageMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              sr.grpc.gen.WeightedAverageArguments,
+              sr.grpc.gen.WeightedAverageResult>(
+                service, METHODID_GET_WEIGHTED_AVERAGE)))
         .build();
   }
 
@@ -485,6 +565,7 @@ public final class CalculatorGrpc {
               .addMethod(getAddMethod())
               .addMethod(getSubtractMethod())
               .addMethod(getMultiplyMethod())
+              .addMethod(getGetWeightedAverageMethod())
               .build();
         }
       }

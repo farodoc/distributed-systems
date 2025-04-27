@@ -20,10 +20,24 @@ message ArithmeticOpResult {
   int32 res = 1;
 }
 
+message Grade {
+  double value = 1;
+  double weight = 2;
+}
+
+message WeightedAverageArguments {
+  repeated Grade grades = 1;
+}
+
+message WeightedAverageResult {
+  double res = 1;
+}
+
 service Calculator {
   rpc Add (ArithmeticOpArguments) returns (ArithmeticOpResult) {}
   rpc Subtract (ArithmeticOpArguments) returns (ArithmeticOpResult) {}
   rpc Multiply (MultiplyArguments) returns (ArithmeticOpResult) {}
+  rpc GetWeightedAverage (WeightedAverageArguments) returns (WeightedAverageResult) {}
 }
 
 enum OperationType {
