@@ -13,9 +13,9 @@ def main():
         services = reflection_db.get_services()
         print(f"Available services: {services}")
 
-        example_add(channel, desc_pool)
+        # example_add(channel, desc_pool)
         # example_mul(channel, desc_pool)
-        # example_weighted_average(channel, desc_pool)
+        example_weighted_average(channel, desc_pool)
         # example_server_stream(channel, desc_pool)
         # example_client_stream(channel, desc_pool)
 
@@ -95,7 +95,6 @@ def example_mul(channel: grpc.Channel, desc_pool: DescriptorPool):
 
 def example_weighted_average(channel: grpc.Channel, desc_pool: DescriptorPool):
     service_desc = desc_pool.FindServiceByName("calculator.Calculator")
-    grade_desc = desc_pool.FindMessageTypeByName("calculator.Grade")
     
     print(f"\n{service_desc.full_name}")
     print("-" * 20)
@@ -108,6 +107,10 @@ def example_weighted_average(channel: grpc.Channel, desc_pool: DescriptorPool):
 
     request_desc = avg_method.input_type
     request_class = GetMessageClass(request_desc)
+
+    print(request_desc.fields_by_name)
+
+    grade_desc = request_desc.fields_by_name["grades"].message_type
     grade_class = GetMessageClass(grade_desc)
 
     request = request_class()
